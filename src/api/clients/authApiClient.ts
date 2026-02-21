@@ -44,7 +44,7 @@ export class AuthApiClient extends BaseApiClient {
     this.tokenExpiresAt = now + body.expiresIn * 1000;
     logger.info(`Access token obtained, expires in ${body.expiresIn}s`);
 
-    return this.cachedToken;
+    return this.cachedToken!;
   }
 
   clearCache(): void {
