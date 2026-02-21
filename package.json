@@ -12,6 +12,18 @@
     "typecheck": "tsc --noEmit",
     "mock": "node mock-server/server.js"
   },
+  "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+    "env": { "node": true, "es2020": true },
+    "rules": {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+    },
+    "ignorePatterns": ["dist/", "node_modules/", "playwright-report/", "mock-server/"]
+  },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.5",
