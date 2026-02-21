@@ -1,0 +1,155 @@
+name: API Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  BASE_URL: 'http://localhost:3000'
+  CLIENT_ID: 'test-client-id'
+  CLIENT_SECRET: 'test-client-secret'
+  NODE_ENV: ci
+
+jobs:
+  validate:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start mock API server
+        run: node mock-server/server.js & echo "MOCK_PID=$!" >> $GITHUB_ENV
+      - name: Wait for mock server
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/health > /dev/null; then echo "Ready"; exit 0; fi
+            sleep 1
+          done
+          echo "Mock server failed to start" && exit 1
+      - run: npx playwright test --project=smoke --reporter=list
+      - name: Stop mock server
+        if: always()
+        run: kill $MOCK_PID || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-results
+          path: test-results/
+          retention-days: 3
+
+  regression:
+    name: Regression - ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [loans, auth]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start mock API server
+        run: node mock-server/server.js & echo "MOCK_PID=$!" >> $GITHUB_ENV
+      - name: Wait for mock server
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/health > /dev/null; then echo "Ready"; exit 0; fi
+            sleep 1
+          done
+          echo "Mock server failed to start" && exit 1
+      - run: npx playwright test tests/${{ matrix.suite }} --project=regression --reporter=junit,list
+      - name: Stop mock server
+        if: always()
+        run: kill $MOCK_PID || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-results-${{ matrix.suite }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  contract:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start mock API server
+        run: node mock-server/server.js & echo "MOCK_PID=$!" >> $GITHUB_ENV
+      - name: Wait for mock server
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/health > /dev/null; then echo "Ready"; exit 0; fi
+            sleep 1
+          done
+          echo "Mock server failed to start" && exit 1
+      - run: npx playwright test --project=contract --reporter=junit,list
+      - name: Stop mock server
+        if: always()
+        run: kill $MOCK_PID || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: contract-results
+          path: test-results/
+          retention-days: 7
+
+  report:
+    name: Publish HTML Report
+    runs-on: ubuntu-latest
+    needs: [regression, contract]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*-results*'
+          merge-multiple: true
+          path: all-results/
+      - run: npx playwright merge-reports --reporter html all-results/ || echo "No reports to merge"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 30
