@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LoanApplicationResponse",
+  "description": "Schema contract for POST /v1/loans and GET /v1/loans/:id responses",
+  "type": "object",
+  "required": [
+    "applicationId",
+    "referenceNumber",
+    "product",
+    "status",
+    "requestedAmount",
+    "termMonths",
+    "repaymentFrequency",
+    "applicant",
+    "createdAt",
+    "updatedAt",
+    "_links"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "applicationId": { "type": "string", "minLength": 1 },
+    "referenceNumber": {
+      "type": "string",
+      "pattern": "^LN-[0-9]{8}-[A-Z0-9]{4}$"
+    },
+    "product": {
+      "type": "string",
+      "enum": ["HOME_LOAN", "PERSONAL_LOAN", "AUTO_LOAN", "BUSINESS_LOAN"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "DECLINED", "DISBURSED", "CLOSED"]
+    },
+    "requestedAmount": { "type": "number", "minimum": 1000 },
+    "termMonths": { "type": "integer", "minimum": 1, "maximum": 480 },
+    "repaymentFrequency": {
+      "type": "string",
+      "enum": ["WEEKLY", "FORTNIGHTLY", "MONTHLY"]
+    },
+    "purpose": { "type": "string", "minLength": 5 },
+    "applicant": {
+      "type": "object",
+      "required": ["firstName", "lastName", "dateOfBirth", "email", "phone", "annualIncome", "employmentStatus"],
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "dateOfBirth": { "type": "string", "format": "date" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "annualIncome": { "type": "number", "minimum": 0 },
+        "employmentStatus": {
+          "type": "string",
+          "enum": ["EMPLOYED_FULL_TIME", "EMPLOYED_PART_TIME", "SELF_EMPLOYED", "UNEMPLOYED"]
+        }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "_links": {
+      "type": "object",
+      "required": ["self"],
+      "properties": {
+        "self": {
+          "type": "object",
+          "required": ["href"],
+          "properties": { "href": { "type": "string", "format": "uri" } }
+        },
+        "decision": {
+          "type": "object",
+          "properties": { "href": { "type": "string", "format": "uri" } }
+        }
+      }
+    }
+  }
+}

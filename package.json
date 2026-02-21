@@ -1,0 +1,26 @@
+{
+  "name": "api-automation-playwright",
+  "version": "1.0.0",
+  "description": "RESTful API test automation suite using Playwright — lending & financial services domain",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test --grep @regression",
+    "test:ci": "playwright test --reporter=junit,html",
+    "report": "playwright show-report",
+    "lint": "eslint src tests --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1",
+    "dotenv": "^16.4.1",
+    "winston": "^3.11.0"
+  }
+}
