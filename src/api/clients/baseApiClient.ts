@@ -1,6 +1,5 @@
 import { APIRequestContext, APIResponse } from '@playwright/test';
 import { logger } from '../../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface RequestOptions {
   headers?: Record<string, string>;
@@ -10,7 +9,7 @@ export interface RequestOptions {
 
 /**
  * Base API client wrapping Playwright's APIRequestContext.
- * Provides consistent logging, correlation ID injection, and error handling
+ * Provides consistent logging, correlation ID injection, and response parsing
  * across all service-level clients.
  */
 export class BaseApiClient {
@@ -18,7 +17,7 @@ export class BaseApiClient {
 
   protected buildHeaders(authToken?: string): Record<string, string> {
     const headers: Record<string, string> = {
-      'x-correlation-id': uuidv4(),
+      'x-correlation-id': crypto.randomUUID(),
       'x-api-version': '1.0',
     };
     if (authToken) {
@@ -48,7 +47,7 @@ export class BaseApiClient {
     authToken?: string,
     options: RequestOptions = {},
   ): Promise<{ response: APIResponse; body: T }> {
-    logger.info(`POST ${url} — payload: ${JSON.stringify(payload)}`);
+    logger.info(`POST ${url}`);
     const response = await this.request.post(url, {
       headers: { ...this.buildHeaders(authToken), ...(options.headers ?? {}) },
       data: payload,

@@ -22,7 +22,6 @@ export class AuthApiClient extends BaseApiClient {
 
   async getAccessToken(): Promise<string> {
     const now = Date.now();
-    // Refresh 30s before actual expiry
     if (this.cachedToken && now < this.tokenExpiresAt - 30_000) {
       return this.cachedToken;
     }

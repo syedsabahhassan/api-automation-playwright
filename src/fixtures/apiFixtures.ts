@@ -1,21 +1,20 @@
-import { test as base, request } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { AuthApiClient } from '../api/clients/authApiClient';
 import { LoanApiClient } from '../api/clients/loanApiClient';
-
-/**
- * Extended Playwright fixtures that wire up domain-specific API clients.
- * Tests receive pre-authenticated client instances — no boilerplate needed.
- *
- * Usage:
- *   import { test } from '@fixtures/apiFixtures';
- *   test('...', async ({ loanApi }) => { ... });
- */
 
 type ApiFixtures = {
   authApi: AuthApiClient;
   loanApi: LoanApiClient;
 };
 
+/**
+ * Extended Playwright fixtures that wire up domain-specific API clients.
+ * Tests receive pre-authenticated client instances — no boilerplate needed.
+ *
+ * Usage:
+ *   import { test } from '../../src/fixtures/apiFixtures';
+ *   test('...', async ({ loanApi }) => { ... });
+ */
 export const test = base.extend<ApiFixtures>({
   authApi: async ({ request }, use) => {
     const authApi = new AuthApiClient(

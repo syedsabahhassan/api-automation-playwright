@@ -1,10 +1,5 @@
 import { CreateLoanApplicationRequest, Applicant } from '../api/types/loan.types';
 
-/**
- * Canonical test applicant — used across suites to avoid duplication.
- * Dates and amounts are chosen to pass standard affordability thresholds
- * in the demo environment.
- */
 export const DEFAULT_APPLICANT: Applicant = {
   firstName: 'Alex',
   lastName: 'Martinez',
@@ -59,7 +54,6 @@ export const buildPersonalLoanRequest = (
 export const BOUNDARY_AMOUNTS = {
   MIN_LOAN: 1_000,
   MAX_PERSONAL_LOAN: 50_000,
-  MAX_HOME_LOAN: 3_000_000,
   BELOW_MIN: 999,
   ABOVE_MAX_PERSONAL: 50_001,
 };

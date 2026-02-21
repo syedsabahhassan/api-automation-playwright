@@ -3,18 +3,12 @@ import { buildHomeLoanRequest } from '../../src/fixtures/testData';
 import { validateSchema } from '../../src/utils/schemaValidator';
 
 /**
- * GET /v1/loans/:id — Retrieve Loan Application
- *
- * Covers:
- *  - Successful retrieval of a previously created application
- *  - Schema contract on GET response
- *  - 404 for unknown IDs
- *  - 401 for missing/invalid auth token
+ * GET /v1/loans & GET /v1/loans/:id
+ * Covers: retrieval, pagination, filtering, 401 and 404 error cases.
  */
-test.describe('GET /v1/loans/:id — Retrieve Loan Application', () => {
+test.describe('GET /v1/loans — Retrieve & List Applications', () => {
   let createdApplicationId: string;
 
-  // Create a single application shared across GET tests in this suite
   test.beforeAll(async ({ loanApi }) => {
     const { body } = await loanApi.createApplication(buildHomeLoanRequest());
     createdApplicationId = body.applicationId;
@@ -43,8 +37,8 @@ test.describe('GET /v1/loans/:id — Retrieve Loan Application', () => {
     loanApi,
   }) => {
     const { body } = await loanApi.getApplication(createdApplicationId);
-
     const { valid, errors } = validateSchema('loan-application', body);
+
     expect(valid, `Schema violations: ${errors.join('; ')}`).toBe(true);
   });
 
@@ -56,14 +50,14 @@ test.describe('GET /v1/loans/:id — Retrieve Loan Application', () => {
   });
 
   test('@regression should return 401 when no auth token is provided', async ({ request }) => {
-    const baseUrl = process.env.BASE_URL!;
-    const response = await request.get(`${baseUrl}/v1/loans/${createdApplicationId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await request.get(
+      `${process.env.BASE_URL}/v1/loans/${createdApplicationId}`,
+      { headers: { 'Content-Type': 'application/json' } },
+    );
     expect(response.status()).toBe(401);
   });
 
-  test('@regression should list all applications with pagination metadata', async ({ loanApi }) => {
+  test('@regression should list applications with pagination metadata', async ({ loanApi }) => {
     const { response, body } = await loanApi.listApplications({ page: 1, pageSize: 10 });
 
     expect(response.status()).toBe(200);
@@ -74,12 +68,10 @@ test.describe('GET /v1/loans/:id — Retrieve Loan Application', () => {
     expect(body._links.self).toBeTruthy();
   });
 
-  test('@regression should filter applications by status', async ({ loanApi }) => {
+  test('@regression should filter list results by status DRAFT', async ({ loanApi }) => {
     const { response, body } = await loanApi.listApplications({ status: 'DRAFT' });
 
     expect(response.status()).toBe(200);
-    body.data.forEach((app) => {
-      expect(app.status).toBe('DRAFT');
-    });
+    body.data.forEach((app) => expect(app.status).toBe('DRAFT'));
   });
 });

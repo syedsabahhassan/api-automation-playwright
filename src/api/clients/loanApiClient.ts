@@ -24,7 +24,6 @@ export class LoanApiClient extends BaseApiClient {
     this.baseUrl = `${baseUrl}/v1/loans`;
   }
 
-  /** POST /v1/loans — submit a new loan application */
   async createApplication(
     payload: CreateLoanApplicationRequest,
   ): Promise<{ response: APIResponse; body: LoanApplicationResponse }> {
@@ -32,7 +31,6 @@ export class LoanApiClient extends BaseApiClient {
     return this.post<LoanApplicationResponse>(this.baseUrl, payload, token);
   }
 
-  /** GET /v1/loans/:id — retrieve a single application */
   async getApplication(
     applicationId: string,
   ): Promise<{ response: APIResponse; body: LoanApplicationResponse }> {
@@ -40,7 +38,6 @@ export class LoanApiClient extends BaseApiClient {
     return this.get<LoanApplicationResponse>(`${this.baseUrl}/${applicationId}`, token);
   }
 
-  /** GET /v1/loans — list applications with optional filters */
   async listApplications(params?: {
     status?: string;
     product?: string;
@@ -53,7 +50,6 @@ export class LoanApiClient extends BaseApiClient {
     });
   }
 
-  /** PATCH /v1/loans/:id — update an application (e.g. change term or amount) */
   async updateApplication(
     applicationId: string,
     payload: Partial<Pick<CreateLoanApplicationRequest, 'requestedAmount' | 'termMonths' | 'repaymentFrequency'>>,
@@ -62,7 +58,6 @@ export class LoanApiClient extends BaseApiClient {
     return this.patch<LoanApplicationResponse>(`${this.baseUrl}/${applicationId}`, payload, token);
   }
 
-  /** GET /v1/loans/:id/decision — retrieve underwriting decision */
   async getDecision(
     applicationId: string,
   ): Promise<{ response: APIResponse; body: LoanDecision }> {
@@ -70,7 +65,6 @@ export class LoanApiClient extends BaseApiClient {
     return this.get<LoanDecision>(`${this.baseUrl}/${applicationId}/decision`, token);
   }
 
-  /** DELETE /v1/loans/:id — withdraw a draft application */
   async withdrawApplication(applicationId: string): Promise<APIResponse> {
     const token = await this.auth.getAccessToken();
     return this.delete(`${this.baseUrl}/${applicationId}`, token);

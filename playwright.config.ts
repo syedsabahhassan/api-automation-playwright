@@ -19,7 +19,7 @@ export default defineConfig({
     : [['html', { open: 'on-failure' }], ['list']],
 
   use: {
-    baseURL: process.env.BASE_URL || 'https://api.loans-demo.internal',
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
     extraHTTPHeaders: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -33,7 +33,6 @@ export default defineConfig({
     {
       name: 'smoke',
       grep: /@smoke/,
-      use: { baseURL: process.env.BASE_URL || 'https://api.loans-demo.internal' },
     },
     {
       name: 'regression',
