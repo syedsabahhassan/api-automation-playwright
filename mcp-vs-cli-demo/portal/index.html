@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoanPortal — Apply Online</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:    #1a56db;
+      --brand-dk: #1e429f;
+      --success:  #057a55;
+      --danger:   #c81e1e;
+      --gray-50:  #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --radius:   8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ─────────────────────────────────────────────────────────── */
+    nav {
+      background: var(--brand);
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav .logo { font-weight: 700; font-size: 18px; letter-spacing: -.5px; }
+    nav .nav-user { font-size: 14px; opacity: .85; display: none; align-items: center; gap: 12px; }
+    nav .nav-user button {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────────────── */
+    .container { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+
+    /* ── Card ────────────────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+      padding: 32px;
+    }
+    .card h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .card .subtitle { color: var(--gray-400); font-size: 14px; margin-bottom: 24px; }
+
+    /* ── Form elements ───────────────────────────────────────────────── */
+    .form-row { margin-bottom: 16px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+    label .required { color: var(--danger); margin-left: 2px; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: #fff;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+    }
+    input.error, select.error { border-color: var(--danger); }
+
+    .field-error {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* ── Section heading ─────────────────────────────────────────────── */
+    .section-heading {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--gray-400);
+      margin: 24px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    /* ── Button ──────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary { background: var(--brand); color: #fff; width: 100%; }
+    .btn-primary:hover { background: var(--brand-dk); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+    .btn-secondary:hover { background: var(--gray-200); }
+
+    /* ── Alert ───────────────────────────────────────────────────────── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert.visible { display: block; }
+    .alert-danger  { background: #fdf2f2; color: var(--danger); border: 1px solid #f8b4b4; }
+    .alert-success { background: #f3faf7; color: var(--success); border: 1px solid #84e1bc; }
+
+    /* ── Confirmation ────────────────────────────────────────────────── */
+    .confirmation {
+      text-align: center;
+      padding: 16px 0;
+    }
+    .confirmation .check-icon {
+      width: 56px; height: 56px;
+      background: #f3faf7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+    }
+    .confirmation h3 { font-size: 22px; margin-bottom: 8px; }
+    .confirmation p  { color: var(--gray-400); font-size: 14px; margin-bottom: 24px; }
+
+    .ref-box {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .ref-box .ref-label { font-size: 12px; color: var(--gray-400); margin-bottom: 4px; }
+    .ref-box .ref-number {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      color: var(--brand);
+    }
+    [data-testid="confirmation-ref-number"] { /* alias for test targeting */ }
+
+    /* ── Dashboard ───────────────────────────────────────────────────── */
+    .applications-list { margin-top: 8px; }
+    .application-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 14px;
+    }
+    .application-row:last-child { border-bottom: none; }
+    .application-row .ref { font-weight: 600; }
+    .application-row .meta { color: var(--gray-400); font-size: 12px; margin-top: 2px; }
+    .badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .badge-draft    { background: #e1effe; color: #1a56db; }
+    .badge-approved { background: #f3faf7; color: #057a55; }
+    .badge-declined { background: #fdf2f2; color: #c81e1e; }
+
+    /* ── Spinner ─────────────────────────────────────────────────────── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── View management ─────────────────────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">LoanPortal</span>
+  <span class="nav-user" id="navUser">
+    <span id="navUserName"></span>
+    <button onclick="logout()">Sign out</button>
+  </span>
+</nav>
+
+<div class="container">
+
+  <!-- ── LOGIN ─────────────────────────────────────────────────────── -->
+  <div id="viewLogin" class="view active">
+    <div class="card">
+      <h2>Sign in</h2>
+      <p class="subtitle">Access your loan applications</p>
+
+      <div class="alert alert-danger" id="loginError" role="alert"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-row">
+          <label for="loginEmail">Email address <span class="required">*</span></label>
+          <input
+            type="email"
+            id="loginEmail"
+            name="email"
+            data-testid="login-email"
+            placeholder="you@example.com"
+            autocomplete="email"
+          />
+          <div class="field-error" id="loginEmailError">Please enter a valid email address</div>
+        </div>
+
+        <div class="form-row">
+          <label for="loginPassword">Password <span class="required">*</span></label>
+          <input
+            type="password"
+            id="loginPassword"
+            name="password"
+            data-testid="login-password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <div class="field-error" id="loginPasswordError">Please enter your password</div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          id="loginBtn"
+          data-testid="login-submit"
+        >
+          Sign in
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ─────────────────────────────────────────────────── -->
+  <div id="viewDashboard" class="view">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+          <h2>My Applications</h2>
+          <p class="subtitle">Track your loan application status</p>
+        </div>
+        <button
+          class="btn btn-primary"
+          style="width:auto; padding: 10px 16px;"
+          onclick="showApplyForm()"
+          data-testid="new-application-btn"
+        >
+          + New application
+        </button>
+      </div>
+
+      <div id="dashboardLoading" style="text-align:center; padding:32px; color:var(--gray-400);">
+        Loading applications…
+      </div>
+      <div id="applicationsList" class="applications-list" style="display:none;" data-testid="applications-list"></div>
+      <div id="dashboardEmpty" style="display:none; text-align:center; padding:32px; color:var(--gray-400);">
+        No applications yet.
+        <br /><br />
+        <button class="btn btn-secondary" onclick="showApplyForm()">Apply now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── APPLICATION FORM ───────────────────────────────────────────── -->
+  <div id="viewApply" class="view">
+    <div class="card">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+        <button
+          class="btn btn-secondary"
+          style="padding:6px 12px; font-size:13px;"
+          onclick="showDashboard()"
+          data-testid="back-to-dashboard"
+        >
+          ← Back
+        </button>
+        <h2>New Loan Application</h2>
+      </div>
+      <p class="subtitle">Complete all required fields to submit your application</p>
+
+      <div class="alert alert-danger" id="applyError" role="alert"></div>
+
+      <form id="applyForm" novalidate>
+
+        <div class="section-heading">Loan Details</div>
+
+        <div class="form-row">
+          <label for="loanProduct">Loan type <span class="required">*</span></label>
+          <select id="loanProduct" name="product" data-testid="loan-product">
+            <option value="">— Select loan type —</option>
+            <option value="PERSONAL_LOAN">Personal Loan</option>
+            <option value="HOME_LOAN">Home Loan</option>
+            <option value="AUTO_LOAN">Auto Loan</option>
+            <option value="BUSINESS_LOAN">Business Loan</option>
+          </select>
+          <div class="field-error" id="loanProductError">Please select a loan type</div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label for="requestedAmount">Amount (AUD) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="requestedAmount"
+              name="requestedAmount"
+              data-testid="requested-amount"
+              placeholder="e.g. 15000"
+              min="1000"
+            />
+            <div class="field-error" id="requestedAmountError">Enter a valid amount (min $1,000)</div>
+          </div>
+          <div>
+            <label for="termMonths">Term (months) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="termMonths"
+              name="termMonths"
+              data-testid="term-months"
+              placeholder="e.g. 36"
+              min="3"
+              max="360"
+            />
+            <div class="field-error" id="termMonthsError">Enter a term between 3 and 360 months</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="repaymentFrequency">Repayment frequency <span class="required">*</span></label>
+          <select id="repaymentFrequency" name="repaymentFrequency" data-testid="repayment-frequency">
+            <option value="">— Select frequency —</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="FORTNIGHTLY">Fortnightly</option>
+            <option value="MONTHLY">Monthly</option>
+          </select>
+          <div class="field-error" id="repaymentFrequencyError">Please select repayment frequency</div>
+        </div>
+
+        <div class="form-row">
+          <label for="purpose">Purpose</label>
+          <input
+            type="text"
+            id="purpose"
+            name="purpose"
+            data-testid="loan-purpose"
+            placeholder="e.g. Debt consolidation"
+          />
+        </div>
+
+        <div class="section-heading">Applicant Details</div>
+
+        <div class="form-row-2">
+          <div>
+            <label for="firstName">First name <span class="required">*</span></label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              data-testid="applicant-first-name"
+              placeholder="Alex"
+              autocomplete="given-name"
+            />
+            <div class="field-error" id="firstNameError">First name is required</div>
+          </div>
+          <div>
+            <label for="lastName">Last name <span class="required">*</span></label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              data-testid="applicant-last-name"
+              placeholder="Martinez"
+              autocomplete="family-name"
+            />
+            <div class="field-error" id="lastNameError">Last name is required</div>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label for="dateOfBirth">Date of birth <span class="required">*</span></label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              data-testid="applicant-dob"
+            />
+            <div class="field-error" id="dateOfBirthError">Date of birth is required</div>
+          </div>
+          <div>
+            <label for="email">Email <span class="required">*</span></label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              data-testid="applicant-email"
+              placeholder="alex@example.com"
+              autocomplete="email"
+            />
+            <div class="field-error" id="emailError">A valid email is required</div>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label for="annualIncome">Annual income (AUD) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="annualIncome"
+              name="annualIncome"
+              data-testid="applicant-annual-income"
+              placeholder="95000"
+              min="1"
+            />
+            <div class="field-error" id="annualIncomeError">Annual income is required</div>
+          </div>
+          <div>
+            <label for="employmentStatus">Employment status <span class="required">*</span></label>
+            <select id="employmentStatus" name="employmentStatus" data-testid="applicant-employment-status">
+              <option value="">— Select —</option>
+              <option value="EMPLOYED_FULL_TIME">Full-time employed</option>
+              <option value="EMPLOYED_PART_TIME">Part-time employed</option>
+              <option value="SELF_EMPLOYED">Self-employed</option>
+              <option value="UNEMPLOYED">Unemployed</option>
+              <option value="RETIRED">Retired</option>
+            </select>
+            <div class="field-error" id="employmentStatusError">Employment status is required</div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          id="applyBtn"
+          data-testid="submit-application"
+          style="margin-top:8px;"
+        >
+          Submit application
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── CONFIRMATION ───────────────────────────────────────────────── -->
+  <div id="viewConfirmation" class="view">
+    <div class="card">
+      <div class="confirmation">
+        <div class="check-icon">✓</div>
+        <h3>Application submitted</h3>
+        <p>We've received your application. You'll hear back within 1 business day.</p>
+
+        <div class="ref-box">
+          <div class="ref-label">Reference number</div>
+          <div
+            class="ref-number"
+            id="confirmationRefNumber"
+            data-testid="confirmation-ref-number"
+          >—</div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <button
+            class="btn btn-secondary"
+            onclick="showDashboard()"
+            data-testid="view-dashboard-btn"
+          >
+            View all applications
+          </button>
+          <button
+            class="btn btn-primary"
+            style="width:auto;"
+            onclick="showApplyForm()"
+            data-testid="new-application-after-confirm-btn"
+          >
+            Apply again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  /* ────────────────────────────────────────────────────────────────────────────
+   * LoanPortal SPA — vanilla JS
+   * Talks to the mock API at window.API_BASE (injected or defaulted below)
+   * ────────────────────────────────────────────────────────────────────────── */
+
+  const API_BASE = window.API_BASE || 'http://localhost:3000';
+  let accessToken = null;
+  let currentUser = null;
+
+  // ── View helpers ─────────────────────────────────────────────────────────────
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function showLoginView()        { showView('viewLogin'); }
+  function showApplyForm()        { showView('viewApply'); clearApplyForm(); }
+  function showConfirmationView() { showView('viewConfirmation'); }
+
+  function showDashboard() {
+    showView('viewDashboard');
+    loadApplications();
+  }
+
+  // ── Auth helpers ──────────────────────────────────────────────────────────────
+
+  async function getToken(email) {
+    const r = await fetch(`${API_BASE}/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId:     'test-client-id',
+        clientSecret: 'test-client-secret',
+        grantType:    'client_credentials',
+      }),
+    });
+    if (!r.ok) throw new Error('Auth failed');
+    const data = await r.json();
+    return data.accessToken;
+  }
+
+  function logout() {
+    accessToken  = null;
+    currentUser  = null;
+    document.getElementById('navUser').style.display = 'none';
+    showLoginView();
+  }
+
+  // ── Login ─────────────────────────────────────────────────────────────────────
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    let valid = true;
+
+    if (!email || !email.includes('@')) {
+      showFieldError('loginEmail', 'loginEmailError', true);
+      valid = false;
+    } else {
+      showFieldError('loginEmail', 'loginEmailError', false);
+    }
+
+    if (!password) {
+      showFieldError('loginPassword', 'loginPasswordError', true);
+      valid = false;
+    } else {
+      showFieldError('loginPassword', 'loginPasswordError', false);
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('loginBtn');
+    setLoading(btn, true, 'Signing in…');
+    hideAlert('loginError');
+
+    try {
+      accessToken = await getToken(email);
+      currentUser = { email };
+      document.getElementById('navUserName').textContent = email;
+      document.getElementById('navUser').style.display = 'flex';
+      showDashboard();
+    } catch (err) {
+      showAlert('loginError', 'Could not sign in. Please check your credentials and try again.');
+    } finally {
+      setLoading(btn, false, 'Sign in');
+    }
+  });
+
+  // ── Dashboard ─────────────────────────────────────────────────────────────────
+
+  async function loadApplications() {
+    const loading = document.getElementById('dashboardLoading');
+    const list    = document.getElementById('applicationsList');
+    const empty   = document.getElementById('dashboardEmpty');
+
+    loading.style.display = 'block';
+    list.style.display    = 'none';
+    empty.style.display   = 'none';
+
+    try {
+      const r = await fetch(`${API_BASE}/v1/loans`, {
+        headers: { Authorization: `Bearer ${accessToken}`, 'x-api-version': '1.0' },
+      });
+      if (!r.ok) throw new Error('Failed to load');
+      const data = await r.json();
+      const apps = data.data || [];
+
+      loading.style.display = 'none';
+
+      if (apps.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      list.innerHTML = apps.map(a => `
+        <div class="application-row" data-testid="application-row" data-ref="${a.referenceNumber}">
+          <div>
+            <div class="ref" data-testid="application-ref">${a.referenceNumber}</div>
+            <div class="meta">${a.product.replace(/_/g, ' ')} · $${a.requestedAmount.toLocaleString()}</div>
+          </div>
+          <span class="badge badge-${a.status.toLowerCase()}" data-testid="application-status">${a.status}</span>
+        </div>
+      `).join('');
+      list.style.display = 'block';
+    } catch {
+      loading.style.display = 'none';
+      empty.style.display   = 'block';
+    }
+  }
+
+  // ── Apply form ────────────────────────────────────────────────────────────────
+
+  function clearApplyForm() {
+    document.getElementById('applyForm').reset();
+    document.querySelectorAll('.field-error').forEach(el => el.classList.remove('visible'));
+    document.querySelectorAll('input.error, select.error').forEach(el => el.classList.remove('error'));
+    hideAlert('applyError');
+  }
+
+  document.getElementById('applyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const getValue = id => document.getElementById(id).value.trim();
+    const getNum   = id => parseFloat(document.getElementById(id).value) || 0;
+
+    const product             = getValue('loanProduct');
+    const requestedAmount     = getNum('requestedAmount');
+    const termMonths          = getNum('termMonths');
+    const repaymentFrequency  = getValue('repaymentFrequency');
+    const purpose             = getValue('purpose');
+    const firstName           = getValue('firstName');
+    const lastName            = getValue('lastName');
+    const dateOfBirth         = getValue('dateOfBirth');
+    const emailVal            = getValue('email');
+    const annualIncome        = getNum('annualIncome');
+    const employmentStatus    = getValue('employmentStatus');
+
+    let valid = true;
+    const check = (field, errorId, condition) => {
+      if (!condition) { showFieldError(field, errorId, true);  valid = false; }
+      else              showFieldError(field, errorId, false);
+    };
+
+    check('loanProduct',          'loanProductError',          !!product);
+    check('requestedAmount',      'requestedAmountError',      requestedAmount >= 1000);
+    check('termMonths',           'termMonthsError',           termMonths >= 3 && termMonths <= 360);
+    check('repaymentFrequency',   'repaymentFrequencyError',   !!repaymentFrequency);
+    check('firstName',            'firstNameError',            !!firstName);
+    check('lastName',             'lastNameError',             !!lastName);
+    check('dateOfBirth',          'dateOfBirthError',          !!dateOfBirth);
+    check('email',                'emailError',                emailVal.includes('@'));
+    check('annualIncome',         'annualIncomeError',         annualIncome > 0);
+    check('employmentStatus',     'employmentStatusError',     !!employmentStatus);
+
+    if (!valid) return;
+
+    const btn = document.getElementById('applyBtn');
+    setLoading(btn, true, 'Submitting…');
+    hideAlert('applyError');
+
+    const payload = {
+      product, requestedAmount, termMonths, repaymentFrequency, purpose,
+      applicant: { firstName, lastName, dateOfBirth, email: emailVal, annualIncome, employmentStatus },
+    };
+
+    try {
+      const r = await fetch(`${API_BASE}/v1/loans`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:  `Bearer ${accessToken}`,
+          'x-api-version': '1.0',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const body = await r.json();
+
+      if (!r.ok) {
+        const msg = body.message || 'Submission failed. Please check your details and try again.';
+        showAlert('applyError', msg);
+        return;
+      }
+
+      document.getElementById('confirmationRefNumber').textContent = body.referenceNumber;
+      showConfirmationView();
+    } catch (err) {
+      showAlert('applyError', 'A network error occurred. Please check your connection and try again.');
+    } finally {
+      setLoading(btn, false, 'Submit application');
+    }
+  });
+
+  // ── UI helpers ────────────────────────────────────────────────────────────────
+
+  function showFieldError(fieldId, errorId, show) {
+    const field = document.getElementById(fieldId);
+    const err   = document.getElementById(errorId);
+    if (!field || !err) return;
+    if (show) { field.classList.add('error');    err.classList.add('visible'); }
+    else      { field.classList.remove('error'); err.classList.remove('visible'); }
+  }
+
+  function showAlert(id, message) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('visible');
+  }
+
+  function hideAlert(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('visible');
+  }
+
+  function setLoading(btn, loading, label) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? `<span class="spinner"></span> ${label}`
+      : label;
+  }
+</script>
+
+</body>
+</html>

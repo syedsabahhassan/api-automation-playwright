@@ -15,26 +15,44 @@
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-    "env": { "node": true, "es2020": true },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "env": {
+      "node": true,
+      "es2020": true
+    },
     "rules": {
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ]
     },
-    "ignorePatterns": ["dist/", "node_modules/", "playwright-report/", "mock-server/"]
+    "ignorePatterns": [
+      "dist/",
+      "node_modules/",
+      "playwright-report/",
+      "mock-server/"
+    ]
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.5",
-    "typescript": "^5.3.3",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",
     "dotenv": "^16.4.1",
-    "winston": "^3.11.0",
-    "express": "^4.18.3"
+    "eslint": "^8.56.0",
+    "express": "^4.18.3",
+    "typescript": "^5.3.3",
+    "winston": "^3.11.0"
   }
 }

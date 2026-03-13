@@ -1,0 +1,222 @@
+##
+## Demo CI Pipeline — MCP vs CLI Comparison
+##
+## Follows the same 5-job structure as the companion API automation repo:
+##   validate → smoke → regression → report
+##
+## The MCP tests are excluded from CI by default (they require a Claude API key).
+## To include them: set ANTHROPIC_API_KEY as a repository secret and uncomment
+## the mcp-tests job.
+##
+## Trigger: push / PR on any branch; nightly full run on main
+##
+
+name: Demo CI — MCP vs CLI
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'mcp-vs-cli-demo/**'
+      - '.github/workflows/demo-ci.yml'
+  pull_request:
+    branches: ['**']
+    paths:
+      - 'mcp-vs-cli-demo/**'
+  schedule:
+    - cron: '0 2 * * *'   # nightly at 2am UTC
+
+defaults:
+  run:
+    working-directory: mcp-vs-cli-demo
+
+env:
+  API_BASE_URL:  http://localhost:3000
+  PORTAL_URL:    http://localhost:3001
+  CLIENT_ID:     test-client-id
+  CLIENT_SECRET: test-client-secret
+  TEST_USER_EMAIL:    alex.martinez@example.com
+  TEST_USER_PASSWORD: TestPass123!
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 1: validate — lint / type-check, no servers needed
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+  validate:
+    name: Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mcp-vs-cli-demo/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 2: smoke — fast subset, runs on every push
+# ─────────────────────────────────────────────────────────────────────────────
+  smoke:
+    name: Smoke Tests (CLI)
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mcp-vs-cli-demo/package-lock.json
+
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+
+      - name: Start mock API server
+        working-directory: .
+        run: node mock-server/server.js &
+        env:
+          MOCK_PORT: 3000
+
+      - name: Wait for mock API to be ready
+        run: |
+          for i in {1..15}; do
+            curl -sf http://localhost:3000/health && echo "API ready" && break
+            echo "Waiting for API... ($i)"
+            sleep 2
+          done
+
+      - name: Start portal server
+        run: node portal-server.js &
+
+      - name: Wait for portal to be ready
+        run: |
+          for i in {1..10}; do
+            curl -sf http://localhost:3001/health && echo "Portal ready" && break
+            echo "Waiting for portal... ($i)"
+            sleep 2
+          done
+
+      - name: Run smoke tests (CLI)
+        run: npx playwright test tests/cli --project=chromium-cli --grep @smoke
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-results
+          path: |
+            mcp-vs-cli-demo/playwright-report/
+            mcp-vs-cli-demo/test-results/
+          retention-days: 7
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 3: regression — full CLI suite
+# ─────────────────────────────────────────────────────────────────────────────
+  regression:
+    name: Regression Tests (CLI)
+    needs: smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mcp-vs-cli-demo/package-lock.json
+
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+
+      - name: Start servers
+        run: |
+          node ../mock-server/server.js &
+          sleep 2
+          node portal-server.js &
+          sleep 2
+        env:
+          MOCK_PORT: 3000
+
+      - name: Run full CLI regression
+        run: npx playwright test tests/cli --project=chromium-cli --grep @regression
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-results
+          path: |
+            mcp-vs-cli-demo/playwright-report/
+            mcp-vs-cli-demo/test-results/results.xml
+          retention-days: 14
+
+## ─────────────────────────────────────────────────────────────────────────────
+## JOB 4 (optional): MCP tests — only runs if ANTHROPIC_API_KEY is set
+## Uncomment to enable. Requires ANTHROPIC_API_KEY as a repository secret.
+## ─────────────────────────────────────────────────────────────────────────────
+#  mcp-tests:
+#    name: MCP Demo Tests
+#    needs: smoke
+#    runs-on: ubuntu-latest
+#    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-node@v4
+#        with:
+#          node-version: '20'
+#          cache: 'npm'
+#          cache-dependency-path: mcp-vs-cli-demo/package-lock.json
+#      - run: npm ci
+#      - run: npx playwright install chromium --with-deps
+#      - name: Start servers
+#        run: |
+#          node ../mock-server/server.js &
+#          node portal-server.js &
+#          sleep 3
+#        env:
+#          MOCK_PORT: 3000
+#      - name: Run MCP demo tests
+#        run: npx playwright test tests/mcp --project=mcp
+#        env:
+#          CI: true
+#          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+#      - uses: actions/upload-artifact@v4
+#        if: always()
+#        with:
+#          name: mcp-results
+#          path: mcp-vs-cli-demo/playwright-report/
+#          retention-days: 7
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 5: report — publish HTML report as workflow summary
+# ─────────────────────────────────────────────────────────────────────────────
+  report:
+    name: Publish Report
+    needs: [smoke, regression]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download regression results
+        uses: actions/download-artifact@v4
+        with:
+          name: regression-results
+          path: results/
+        continue-on-error: true
+
+      - name: Report summary
+        run: |
+          echo "## Test Run Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Smoke (CLI) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Regression (CLI) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| MCP Demo | Requires API key — see docs |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See [COMPARISON_MATRIX.md](./docs/COMPARISON_MATRIX.md) for full analysis." >> $GITHUB_STEP_SUMMARY

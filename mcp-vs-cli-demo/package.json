@@ -1,0 +1,31 @@
+{
+  "name": "mcp-vs-cli-demo",
+  "version": "1.0.0",
+  "description": "Side-by-side comparison of Playwright MCP vs CLI test automation — loan application demo",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:cli": "playwright test tests/cli --project=chromium-cli",
+    "test:cli:smoke": "playwright test tests/cli --project=chromium-cli --grep @smoke",
+    "test:cli:regression": "playwright test tests/cli --project=chromium-cli --grep @regression",
+    "test:mcp": "playwright test tests/mcp --project=mcp",
+    "test:api": "playwright test tests/cli --project=api-verify",
+    "test:all": "playwright test",
+    "portal": "node portal-server.js",
+    "mock": "node ../mock-server/server.js",
+    "start": "concurrently \"npm run mock\" \"npm run portal\"",
+    "report": "playwright show-report",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "dotenv": "^16.4.0",
+    "concurrently": "^8.2.0",
+    "winston": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
